@@ -13,16 +13,24 @@
    <a href="mailto:erik.staszewski@gmail.com"><b>Email Me</b></a> | <a href="https://www.linkedin.com/in/estasz/"><b>My LinkedIn</b></a></b></a>
 </div>
 
-This project, SmartStrategy, supports quantitative trading with a signal-driven method. The strategy uses stocks like Apple, Amazon, and Tesla.
-
-## Overview
-
-Apple, Amazon, and Tesla were specifically selected due to their normalized start-to-end performance being similar to the S&P 500 benchmark during the testing window period of 2021 to 2024. The dataset spans from 2019 to 2024, with a training window covering 2019 to 2021 and a test window from 2021 to 2024. All financial data was sourced from Yahoo Finance. The predictive model employed is an LSTM implemented in PyTorch, using SiLU activations and multi-layer fully connected heads. Optimization was performed using the Adam optimizer, enhanced with a learning rate scheduler and early stopping. Model performance was evaluated using MAE, MAPE, and directional accuracy.
+SmartStrategy is a quantitative trading framework that leverages predictive modeling and signal-based logic to dynamically allocate capital among selected equities. The system employs individual LSTM models to forecast daily closing prices for Apple (AAPL), Tesla (TSLA), and Amazon (AMZN), and uses directional predictions to guide trades. Performance is benchmarked against the S&P 500 index.
 
 <a name="top"></a>
 <div align="center">
-  <img src="./figures/Comparison.png" style="width: 80%;"/>
+  <img src="./figures/Comparison.png" style="width: 100%;"/>
 </div>
+
+## Overview
+
+The dataset spans from January 2019 to December 2024, with financial data obtained via Yahoo Finance (or local CSV alternatives when unavailable). The strategy was designed with a training window from 2019–2021 and a test window from 2021–2024.
+
+Each stock is modeled independently using an LSTM neural network implemented in PyTorch, configured with SiLU activations and five fully connected layers. Training employs the Adam optimizer, along with a learning rate scheduler and early stopping based on validation loss. A 60-day rolling window is used to predict next-day closing prices.
+
+Model performance is evaluated using:
+
+* Mean Absolute Error (MAE)
+* Mean Absolute Percentage Error (MAPE)
+* Directional Accuracy
 
 ## Model Highlights
 
@@ -35,16 +43,24 @@ Apple, Amazon, and Tesla were specifically selected due to their normalized star
 
 ## Strategy Logic
 
-The strategy evaluates the predicted percentage change across all stocks and identifies the one with the strongest signal, whether upward or downward. To mitigate noise, smoothing techniques and signal thresholds are applied before any trading decisions are made. Trades are executed using fixed holding periods, and returns are compounded based on the directional accuracy of the model's predictions.
+The strategy computes one-day-ahead predicted changes for each stock and derives percentage-based signals. It selects the stock with the highest absolute predicted change to form a directional trade signal. To reduce noise and overtrading, signals are:
+
+* Smoothed using a centered rolling mean
+* Thresholded (±1%) to filter insignificant predictions
+* Held for a fixed 5-day period, regardless of intermediate signal changes
+
+The final position (long, short, or hold) determines which stock is held and for how long. Returns are calculated based on realized price changes during the holding period.
 
 ## Performance Summary
 
-The plot below shows the returns log-scaled. As can be seen, the SmartStrategy quickly outperforms the S&P 500 benchmark as well as each individual stock. The results accumulate into a significantly larger profit over the course of 4 years.
+The table below compares SmartStrategy to a passive SPY buy-and-hold benchmark over the test period:
 
 <a name="top"></a>
 <div align="center">
-  <img src="./figures/Result.png" style="width: 80%;"/>
+  <img src="./figures/Result.png" style="width: 100%;"/>
 </div>
+
+A log-scaled equity curve visualization further illustrates the compounding advantage of SmartStrategy over the benchmark and the individual constituent stocks.
 
 <div align="center">
 
@@ -77,9 +93,9 @@ The plot below shows the returns log-scaled. As can be seen, the SmartStrategy q
 
 ## Key Features
 
-- Clean, normalized data processing
-- Individual training + backtesting per stock
-- Aggregated strategy selects best-performing signals
-- Visual comparison of predicted vs actual prices
-- Equity curve and portfolio growth visualization
-- Comparison to buy-and-hold benchmarks
+* Individual LSTM Models: Trained independently for AAPL, TSLA, and AMZN
+* Signal-Based Allocation: Selects one stock per day based on predicted movement
+* Noise Control: Applies rolling average smoothing and signal thresholds
+* Position Management: Enforces a 5-day fixed holding period
+* Backtested Evaluation: Cumulative returns, Sharpe ratio, and directional metrics
+* Benchmark Comparison: Against SPY and individual buy-and-hold strategies
